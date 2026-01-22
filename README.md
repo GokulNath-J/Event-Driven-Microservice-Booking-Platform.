@@ -27,6 +27,17 @@ Git & GitHub
 
 ## System Architecture
 
+Client → API Gateway → Microservices → MySQL Databases
+                         ↓
+                      Kafka Broker
+
+## Setup & Run Instructions
+- Prerequisites
+Java 21
+Maven
+Docker
+Kafka
+MySQL
 
 ## API Endpoints
 
@@ -66,13 +77,18 @@ Get /train/getallTrains
 - Get Premium and Tatkal Tickets Manually 
 Get /booking/getPremiumTatkalTickets
 
-## Database Design
-
-
-## Project Structure
-
 ## Future Improvements
 
+Security Enhancement
+I have basic knowledge of Spring Security. In future, I plan to implement proper authentication and authorization using JWT and role-based access control.
 
+Better Exception Handling & Logic Fixes
+I will improve business logic, fix existing logical issues, and handle exceptions using global exception handling.
+
+New Features & APIs
+I have many ideas to add new endpoints such as ticket history, refund tracking, seat availability, and train search APIs.
+
+CI/CD Pipeline with Jenkins
+I recently learned Jenkins and CI/CD pipeline concepts and plan to integrate automated build, test, and deployment into this project.
 
 
