@@ -79,16 +79,16 @@ Get /booking/getPremiumTatkalTickets
 
 ## Future Improvements
 
-Security Enhancement
+Security Enhancement :
 I have basic knowledge of Spring Security. In future, I plan to implement proper authentication and authorization using JWT and role-based access control.
 
-Better Exception Handling & Logic Fixes
+Better Exception Handling & Logic Fixes :
 I will improve business logic, fix existing logical issues, and handle exceptions using global exception handling.
 
-New Features & APIs
+New Features & APIs :
 I have many ideas to add new endpoints such as ticket history, refund tracking, seat availability, and train search APIs.
 
-CI/CD Pipeline with Jenkins
+CI/CD Pipeline with Jenkins : 
 I recently learned Jenkins and CI/CD pipeline concepts and plan to integrate automated build, test, and deployment into this project.
 
 
