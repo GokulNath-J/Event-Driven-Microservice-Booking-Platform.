@@ -17,7 +17,7 @@ This project was built as part of my backend developer learning journey, where I
 - Kubernetes
 - Git & GitHub
 
-## System Architecture
+## Microservice Architecture
 
 Client → API Gateway → Microservices → MySQL Databases
                          ↓
