@@ -8,22 +8,14 @@ This is an event-driven microservices-based booking platform that demonstrates t
 This project was built as part of my backend developer learning journey, where I implemented real-world concepts using Java, Spring Boot, REST APIs, and microservices architecture to understand how scalable backend systems work in practice.
 
 ## Tech Stack
-
-Core Java 
-
-Spring Boot
-
-Spring Cloud (Eureka, Config Server, API Gateway)
-
-Apache Kafka
-
-MySQL
-
-Docker
-
-Kubernetes
-
-Git & GitHub
+- Core Java 
+- Spring Boot
+- Spring Cloud (Eureka, Config Server, API Gateway)
+- Apache Kafka
+- MySQL
+- Docker
+- Kubernetes
+- Git & GitHub
 
 ## System Architecture
 
@@ -33,11 +25,11 @@ Client → API Gateway → Microservices → MySQL Databases
 
 ## Setup & Run Instructions
 - Prerequisites
-Java 21
-Maven
-Docker
-Kafka
-MySQL
+- Java 21
+- Maven
+- Docker
+- Kafka
+- MySQL
 
 ## API Endpoints
 
