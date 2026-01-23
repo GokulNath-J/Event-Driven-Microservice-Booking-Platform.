@@ -9,10 +9,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Eureka-Server" />
         <module name="Config-Server" />
-        <module name="GlobalExceptionModule" />
         <module name="API-GateWay" />
       </profile>
-      <profile name="Annotation profile for Booking-Service" enabled="true">
+      <profile name="Annotation profile for User-Service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -21,7 +20,6 @@
         </processorPath>
         <module name="Booking-Service" />
         <module name="Train-Service" />
-        <module name="Passenger-Reservation" />
         <module name="Payment-Service" />
         <module name="User-Service" />
       </profile>
@@ -33,7 +31,6 @@
       <module name="Booking-Service" options="-parameters" />
       <module name="Config-Server" options="-parameters" />
       <module name="Eureka-Server" options="-parameters" />
-      <module name="Passenger-Reservation" options="-parameters" />
       <module name="Payment-Service" options="-parameters" />
       <module name="Train-Service" options="-parameters" />
       <module name="User-Service" options="-parameters" />

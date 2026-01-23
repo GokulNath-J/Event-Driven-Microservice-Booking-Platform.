@@ -5,9 +5,10 @@ import com.example.Booking.Service.DTO.BookingStatus;
 import com.example.Booking.Service.DTO.PaymentResponse;
 import com.example.Booking.Service.DTO.TicketPrice;
 import com.example.Booking.Service.Entity.PremiumTatkalTickets;
+import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Repository.PremiumTatkalRepo;
 import com.example.Booking.Service.Repository.TicketPriceRepo;
-import com.example.PaymentFailedException;
+
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

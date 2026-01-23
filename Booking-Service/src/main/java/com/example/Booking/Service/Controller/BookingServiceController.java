@@ -5,15 +5,13 @@ import com.example.Booking.Service.Entity.BookedTicketsAndStatus;
 import com.example.Booking.Service.Entity.NormalReservationTickets;
 import com.example.Booking.Service.Entity.PremiumTatkalTickets;
 import com.example.Booking.Service.Entity.TatkalTickets;
+import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Service.BookingService;
-import com.example.PaymentFailedException;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +19,11 @@ import java.util.Map;
 @RequestMapping("/booking")
 public class BookingServiceController {
 
-    @Autowired
     private BookingService bookingService;
 
-
-//    @PostMapping("/addtickets")
-//    public String addTatkalTickets(){
-//        bookingService.addTatkalAndPremiumTatkatTickets();
-//        return "Tickets Saved";
-//    }
+    public BookingServiceController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
     @GetMapping("/getAllTatkalTickets")
     public List<TatkalTickets> getAllTatkalTickets() {
@@ -60,12 +54,6 @@ public class BookingServiceController {
     public List<PremiumAndTatkalDTO> getPremiumAndTataklDTOManually() {
         return bookingService.getPremiumAndTataklDTOManually();
     }
-
-//    @GetMapping("/getNormalTicketsManually")
-//    public HashMap<Integer, List<PremiumAndTatkalDTO>> getNormalTicketsManually() {
-//        return bookingService.getNormalTicketsManually();
-//    }
-
 
     @PostMapping("/addPrice")
     public String addPrice(@RequestBody TicketPrice ticketPrice) {
@@ -116,23 +104,46 @@ public class BookingServiceController {
     }
 
     @GetMapping("/getTrainNumberAndTravelDay")
-    public Map<Integer, LocalDate> getTrainNumberAndTravelDay(){
+    public Map<Integer, LocalDate> getTrainNumberAndTravelDay() {
         return bookingService.getTrainNumberAndTravelDay();
     }
 
     @GetMapping("/getNextNormalReservationTicketsManually")
-    public ResponseEntity<String> getNextNormalReservationTickets(){
+    public ResponseEntity<String> getNextNormalReservationTickets() {
         return bookingService.getNextNormalReservationTickets();
     }
 
     @GetMapping("/getDistinctNormalReservationTickets")
-    public void getDistinctNormalReservationTickets(){
+    public void getDistinctNormalReservationTickets() {
         bookingService.getDistinctNormalReservationTickets();
     }
 
+    @PostMapping("/getTrainForNormalBookingByTrainNumber")
+    public List<NormalTicketDTO> getTrainForNormalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return bookingService.getTrainForNormalBookingByTrainNumber(request);
+    }
+
+    @PostMapping("/getTrainForTatkalBookingByTrainNumber")
+    public List<NormalTicketDTO> getTrainForTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return bookingService.getTrainForTatkalBookingByTrainNumber(request);
+    }
+
+    @PostMapping("/booking/getTrainForPremiumTatkalBookingByTrainNumber")
+    public List<NormalTicketDTO> getTrainForPremiumTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return bookingService.getTrainForPremiumTatkalBookingByTrainNumber(request);
+    }
 
 
+    //    @PostMapping("/addtickets")
+//    public String addTatkalTickets(){
+//        bookingService.addTatkalAndPremiumTatkatTickets();
+//        return "Tickets Saved";
+//    }
 
+    //    @GetMapping("/getNormalTicketsManually")
+//    public HashMap<Integer, List<PremiumAndTatkalDTO>> getNormalTicketsManually() {
+//        return bookingService.getNormalTicketsManually();
+//    }
 
 
 }

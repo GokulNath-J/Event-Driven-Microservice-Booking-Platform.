@@ -1,12 +1,11 @@
 package com.example.User_Service.ServicePackage;
 
-import com.example.PaymentFailedException;
-import com.example.User_Service.DTO.BookingCancelRequestDTO;
-import com.example.User_Service.DTO.BookingRequest;
-import com.example.User_Service.DTO.LoginStatus;
+
+import com.example.User_Service.DTO.*;
 import com.example.User_Service.Entity.NewUserRegister;
 import com.example.User_Service.Entity.UserLoginStatus;
 import com.example.User_Service.ExceptionHandlerPackage.BookingFailedException;
+import com.example.User_Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.User_Service.OpenFeign.BookingFeign;
 import com.example.User_Service.OpenFeign.PaymentFeign;
 import com.example.User_Service.Repository.UserLoginStatusRepo;
@@ -15,10 +14,12 @@ import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,28 +27,35 @@ public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     private PaymentFeign paymentFeign;
 
-    @Autowired
     private BookingFeign bookingFeign;
 
-    @Autowired
     private UserLoginStatusRepo userLoginStatusRepo;
 
+    public UserService(UserRepository userRepository, PaymentFeign paymentFeign, BookingFeign bookingFeign, UserLoginStatusRepo userLoginStatusRepo) {
+        this.userRepository = userRepository;
+        this.paymentFeign = paymentFeign;
+        this.bookingFeign = bookingFeign;
+        this.userLoginStatusRepo = userLoginStatusRepo;
+    }
 
     // Register new newUserRegister
-    public String registerUser(NewUserRegister newUserRegister) {
+    public String registerUser(RegisterNewUserDTO newUserRegister) {
         String value = String.valueOf(newUserRegister.getPhoneNumber());
-        newUserRegister.setUserId(newUserRegister.getUserName() + value.substring(value.length() - 4));
+        NewUserRegister userRegister = NewUserRegister.builder()
+                .userId(newUserRegister.getUserName() + value.substring(value.length() - 4))
+                .userName(newUserRegister.getUserName())
+                .phoneNumber(newUserRegister.getPhoneNumber())
+                .email(newUserRegister.getEmail())
+                .password(newUserRegister.getPassword())
+                .build();
         log.info("UserName from the PostMan:{}", newUserRegister.getUserName());
         log.info("PhoneNumber from the PostMan:{}", newUserRegister.getPhoneNumber());
 //        log.info("EWalletDTO from PostMan:{}", newUserRegister.getEWallet());
-        userRepository.save(newUserRegister);
-
+        userRepository.save(userRegister);
         return "Success";
 
     }
@@ -102,28 +110,20 @@ public class UserService {
         return false;
     }
 
-    public ResponseEntity<String> confirmBooking(BookingRequest request) {
+    public ResponseEntity<String> confirmBooking(BookingRequest request) throws FeignException, PaymentFailedException {
         log.info("request in the UserService");
         if (checkUserIsActive(request.getUserName())) {
             String result = "";
             String bookingtype = request.getBookingMethod();
             ResponseEntity<String> responseEntity;
             if (bookingtype.equals("Normal Reservation")) {
-                try {
-                    responseEntity = bookingFeign.bookNormalReservation(request);
-                    result = responseEntity.getBody();
-                    return responseEntity;
-                } catch (FeignException | PaymentFailedException e) {
-                    throw new BookingFailedException(e.getMessage());
-                }
-            }else if(bookingtype.equals("Tatkal") || bookingtype.equals("Premium Tatkal")){
-                try {
-                    responseEntity = bookingFeign.bookPremiumAndTatkal(request);
-                    result = responseEntity.getBody();
-                    return responseEntity;
-                } catch (FeignException | PaymentFailedException e) {
-                    throw new BookingFailedException(e.getMessage());
-                }
+                responseEntity = bookingFeign.bookNormalReservation(request);
+                result = responseEntity.getBody();
+                return responseEntity;
+            } else if (bookingtype.equals("Tatkal") || bookingtype.equals("Premium Tatkal")) {
+                responseEntity = bookingFeign.bookPremiumAndTatkal(request);
+                result = responseEntity.getBody();
+                return responseEntity;
             }
         }
         return ResponseEntity.badRequest().body("User Not ACTIVE");
@@ -131,25 +131,25 @@ public class UserService {
 
     public boolean checkUserIsActive(String userName) {
         Optional<UserLoginStatus> loginStatus = userLoginStatusRepo.findByUserName(userName);
-        if (loginStatus.get().getLoggedInStatus().equals(LoginStatus.ACTIVE)) {
+        if (loginStatus.isPresent() && loginStatus.get().getLoggedInStatus().equals(LoginStatus.ACTIVE)) {
             return true;
         }
         return false;
     }
 
     public String createNewEWallet(String username, String password) {
-        Optional<UserLoginStatus> loginStatus = userLoginStatusRepo.findByUserName(username);
-        if (loginStatus.isPresent()) {
-            return paymentFeign.createNewEWallet(username, loginStatus.get().getUserId(), password);
+        if (checkUserIsActive(username)) {
+            Optional<NewUserRegister> user = userRepository.findByUserName(username);
+            return paymentFeign.createNewEWallet(username, user.get().getUserId(), password);
         } else {
             return "User Not Found";
         }
     }
 
     public String addMoneyToEWallet(String username, double amount) {
-        Optional<UserLoginStatus> loginStatus = userLoginStatusRepo.findByUserName(username);
-        if (loginStatus.isPresent()) {
-            return paymentFeign.addMoneyToEWallet(loginStatus.get().getUserId(), amount);
+        if (checkUserIsActive(username)) {
+            Optional<NewUserRegister> user = userRepository.findByUserName(username);
+            return paymentFeign.addMoneyToEWallet(user.get().getUserId(), amount);
         } else {
             return "User Not Found";
         }
@@ -159,10 +159,28 @@ public class UserService {
         return bookingFeign.bookingCancelRequest(bookingCancelRequestDTO);
     }
 
+    public ResponseEntity<List<TicketDTO>> getTrainForNormalBookingByTrainNumber(TrainDetailsRequest request) {
+        log.info("In the UserService");
+        List<TicketDTO> ticketDTO = bookingFeign.getTrainForNormalBookingByTrainNumber(request);
+        return new ResponseEntity<>(ticketDTO, HttpStatus.FOUND);
+    }
+
+    public ResponseEntity<List<TicketDTO>> getTrainForTatkalBookingByTrainNumber(TrainDetailsRequest request) {
+        List<TicketDTO> ticketDTO = bookingFeign.getTrainForTatkalBookingByTrainNumber(request);
+        return new ResponseEntity<>(ticketDTO, HttpStatus.FOUND);
+    }
+
+    public ResponseEntity<List<TicketDTO>> getTrainForPremiumTatkalBookingByTrainNumber(TrainDetailsRequest request) {
+        List<TicketDTO> ticketDTO = bookingFeign.getTrainForPremiumTatkalBookingByTrainNumber(request);
+        return new ResponseEntity<>(ticketDTO, HttpStatus.FOUND);
+    }
+
 //    public String addEWallet(String username, EWalletDTO eWallet){
 //        Optional<NewUserRegister> user = userRepository.findByUserName(username);
 //        user.get().setEWallet(eWallet);
 //        eWalletRepo.save(eWallet);
 //        return "Success";
 //    }
+
+
 }

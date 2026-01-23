@@ -29,6 +29,7 @@ public class NewUserRegister {
 
     private String email;
 
+    @Column(nullable = false,unique = true, length = 10)
     private Long phoneNumber;
 
 //    @OneToOne(cascade = CascadeType.ALL)

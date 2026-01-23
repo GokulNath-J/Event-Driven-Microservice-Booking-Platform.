@@ -16,40 +16,40 @@ import java.time.LocalTime;
 import java.util.Map;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ToString
 @Component
 public class ScheduledEndpoints {
 
     private final static Logger log = LoggerFactory.getLogger(ScheduledEndpoints.class);
 
-    @Autowired
     private BookingService bookingService;
 
+    public ScheduledEndpoints(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
-    @Scheduled(cron = "0 40 10 * * * ")
+    @Scheduled(cron = "0 0 10 * * * ")
     public String takalAndPremiumTatkalOpenning() {
         BookingService.setIsTatkalAndPremiunTatkalClosed(false);
         log.info("takalAndPremiumTatkalOpenned");
         return "takalAndPremiumTatkalOpenned";
     }
 
-    @Scheduled(cron = "0 30 11 * * *")
+    @Scheduled(cron = "0 0 12 * * *")
     public String takalAndPremiumTatkalClosing() {
         BookingService.setIsTatkalAndPremiunTatkalClosed(true);
         log.info("takalAndPremiumTatkalClosed");
         return "takalAndPremiumTatkalClosed";
     }
 
-    @Scheduled(cron = "0 1 15 * * *")
+    @Scheduled(cron = "0 50 9 * * *")
     public String getTatkalAndPremiunTatkal() {
         bookingService.getPremiumAndTataklDTOManually();
         log.info("getTatkalAndPremiunTatkal");
         return "PremiumAndTataklDTOManually";
     }
 
-    @Scheduled(cron = "0 10 15 * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     public String waitingTickets() {
         bookingService.getWaitingListTickets();
         log.info("getWaitingListTickets");
@@ -57,7 +57,7 @@ public class ScheduledEndpoints {
     }
 
 
-    @Scheduled(cron = "0 15 18 * * * ")
+    @Scheduled(cron = "0 45 9 * * * ")
     public void clearTatkalAndPremiumTatkalRecord() {
         bookingService.clearTatkalAndPremiumTatkalRecord();
         log.info("clearTatkalAndPremiumTatkalRecord");
@@ -84,12 +84,12 @@ public class ScheduledEndpoints {
             LocalTime closingTime = trainStartingTime.minusHours(4);
             if (currentTime.getHour() == closingTime.getHour()) {
                 tTS.setBookingClosed(true);
-                log.info("TrainNumber:{}:Closed",map.getKey());
+                log.info("TrainNumber:{}:Closed", map.getKey());
             }
         }
     }
 
-    @Scheduled(cron = "1 05 * * * *")
+    @Scheduled(cron = "0 * */1 * * *")
     public void closingCancelletionTicketsPerTrain() {
         log.info("closingCancelletionTicketsPerTrain");
         //Here we are getting the Normal Reservation Tickets of a train which is going to start tomorrow.
@@ -104,7 +104,7 @@ public class ScheduledEndpoints {
             if (currentTime.getHour() == closingTime.getHour()) {
                 tTS.setTicketCancellingClosed(true);
                 bookingService.closingExistingTickets(tTS.getTrainNumber(), tTS.getTravelDate());
-                bookingService.clearNormalTickets(tTS.getTrainNumber(),tTS.getTravelDate());
+                bookingService.clearNormalTickets(tTS.getTrainNumber(), tTS.getTravelDate());
             }
         }
     }
@@ -113,6 +113,5 @@ public class ScheduledEndpoints {
     public void callToGetNextNormalReservationTickets() {
         bookingService.getNextNormalReservationTickets();
     }
-
 
 }

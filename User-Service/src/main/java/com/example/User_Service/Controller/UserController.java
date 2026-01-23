@@ -1,26 +1,29 @@
 package com.example.User_Service.Controller;
 
-import com.example.User_Service.DTO.BookingCancelRequestDTO;
-import com.example.User_Service.DTO.BookingRequest;
+import com.example.User_Service.DTO.*;
 
-import com.example.User_Service.Entity.NewUserRegister;
+import com.example.User_Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.User_Service.ServicePackage.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
     private UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     // Register new newUserRegister
     @PostMapping("/register")
-    public String register(@RequestBody NewUserRegister newUserRegister) {
+    public String register(@RequestBody RegisterNewUserDTO newUserRegister) {
         return userService.registerUser(newUserRegister);
     }
 
@@ -32,28 +35,42 @@ public class UserController {
     }
 
     @PostMapping("/book")
-    public ResponseEntity<String> booking(@RequestBody BookingRequest request) {
+    public ResponseEntity<String> booking(@RequestBody BookingRequest request) throws PaymentFailedException {
         return userService.confirmBooking(request);
     }
 
     @PostMapping("/createNewEWallet")
-    public String createNewEWallet(@RequestParam String username,@RequestParam String password){
-        return userService.createNewEWallet(username,password);
+    public String createNewEWallet(@RequestParam String username, @RequestParam String password) {
+        return userService.createNewEWallet(username, password);
     }
 
     @GetMapping("/gg")
-    public String gen(){
-        return UUID.randomUUID().toString().substring(0,14).replace("-","");
+    public String gen() {
+        return UUID.randomUUID().toString().substring(0, 14).replace("-", "");
     }
 
     @PostMapping("/addMoneyToEWallet")
-    public String addMoneyToEWallet(@RequestParam String username,@RequestParam double amount){
-        return userService.addMoneyToEWallet(username,amount);
+    public String addMoneyToEWallet(@RequestParam String username, @RequestParam double amount) {
+        return userService.addMoneyToEWallet(username, amount);
     }
 
-
     @PutMapping("/bookingCancelRequest")
-    public ResponseEntity<String> bookingCancelRequest(@RequestBody BookingCancelRequestDTO bookingCancelRequestDTO){
+    public ResponseEntity<String> bookingCancelRequest(@RequestBody BookingCancelRequestDTO bookingCancelRequestDTO) {
         return userService.bookingCancelRequest(bookingCancelRequestDTO);
+    }
+
+    @PostMapping("/getTrainForNormalBookingByTrainNumber")
+    public ResponseEntity<List<TicketDTO>> getTrainForNormalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return userService.getTrainForNormalBookingByTrainNumber(request);
+    }
+
+    @PostMapping("/getTrainForTatkalBookingByTrainNumber")
+    public ResponseEntity<List<TicketDTO>> getTrainForTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return userService.getTrainForTatkalBookingByTrainNumber(request);
+    }
+
+    @PostMapping("/getTrainForPremiumTatkalBookingByTrainNumber")
+    public ResponseEntity<List<TicketDTO>> getTrainForPremiumTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
+        return userService.getTrainForPremiumTatkalBookingByTrainNumber(request);
     }
 }

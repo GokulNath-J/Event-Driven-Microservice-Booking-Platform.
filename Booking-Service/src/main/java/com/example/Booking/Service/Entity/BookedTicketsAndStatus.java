@@ -35,7 +35,7 @@ public class BookedTicketsAndStatus {
     private Double amount;
     private String waitingToConfirmTicket;
     private String transactionID;
-    private Boolean isCancellingTicketsClosed;
+    private String isCancellingTicketsClosed;
 
     @Enumerated(value = EnumType.STRING)
     private BookingStatus bookingStatus;

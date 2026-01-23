@@ -1,13 +1,13 @@
 package com.example.Payment_Service.ServicePackage;
 
 
-import com.example.InsufficientBalanceException;
-import com.example.PasswordIncorrectException;
-import com.example.PaymentFailedException;
 import com.example.Payment_Service.DTO.PaymentResponse;
 import com.example.Payment_Service.Entity.BookingTransaction;
 import com.example.Payment_Service.Entity.EWalletDetails;
 import com.example.Payment_Service.Entity.TransactionStatus;
+import com.example.Payment_Service.ExceptionHandlingPackage.InsufficientBalanceException;
+import com.example.Payment_Service.ExceptionHandlingPackage.PasswordIncorrectException;
+import com.example.Payment_Service.ExceptionHandlingPackage.PaymentFailedException;
 import com.example.Payment_Service.Repository.BookingTransactionRepo;
 import com.example.Payment_Service.Repository.EWalletDetailsRepo;
 import org.slf4j.Logger;
@@ -23,25 +23,16 @@ import java.util.UUID;
 @Service
 public class PaymentServiceClass {
 
-
     private final Logger logger = LoggerFactory.getLogger(PaymentServiceClass.class);
 
-
-    @Autowired
     private EWalletDetailsRepo eWalletDetailsRepo;
 
-    @Autowired
     private BookingTransactionRepo bookingTransactionRepo;
 
-//    private EWalletDetailsRepo eWalletDetailsRepo;
-//
-//    public String createNewEWallet(EWallet eWallet) {
-//        EWalletDetails eWalletDetails = new EWalletDetails(eWallet.getEWalletNumber()
-//                ,eWallet.getUserName(),eWallet.getPassword(),eWallet.getAmount());
-//        eWalletDetailsRepo.save(eWalletDetails);
-//        return "EWallet is Sucessfully Added";
-//    }
-
+    public PaymentServiceClass(EWalletDetailsRepo eWalletDetailsRepo, BookingTransactionRepo bookingTransactionRepo) {
+        this.eWalletDetailsRepo = eWalletDetailsRepo;
+        this.bookingTransactionRepo = bookingTransactionRepo;
+    }
 
     public String createNewEWallet(String username, String userId, String password) {
         EWalletDetails eWalletDetails = new EWalletDetails(username, userId, password);
@@ -107,5 +98,16 @@ public class PaymentServiceClass {
         bookingTransaction.setAmountReturned(eachTicketPrice);
         bookingTransaction.setAmountAfterReturned(getTotalAmount - eachTicketPrice);
     }
+
+
+//        private EWalletDetailsRepo eWalletDetailsRepo;
+//
+//    public String createNewEWallet(EWallet eWallet) {
+//        EWalletDetails eWalletDetails = new EWalletDetails(eWallet.getEWalletNumber()
+//                ,eWallet.getUserName(),eWallet.getPassword(),eWallet.getAmount());
+//        eWalletDetailsRepo.save(eWalletDetails);
+//        return "EWallet is Sucessfully Added";
+//    }
+
 }
 

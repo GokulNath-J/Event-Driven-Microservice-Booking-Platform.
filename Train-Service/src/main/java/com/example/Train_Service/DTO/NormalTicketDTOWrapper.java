@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Queue;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public class NormalTicketDTOWrapper {

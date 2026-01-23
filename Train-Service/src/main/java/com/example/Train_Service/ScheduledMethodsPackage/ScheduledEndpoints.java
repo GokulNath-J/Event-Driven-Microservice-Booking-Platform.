@@ -12,20 +12,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ToString
 @Component
 public class ScheduledEndpoints {
 
     private final static Logger log = LoggerFactory.getLogger(ScheduledEndpoints.class);
 
-    @Autowired
     private ServiceClass serviceClass;
 
+    public ScheduledEndpoints(ServiceClass serviceClass) {
+        this.serviceClass = serviceClass;
+    }
 
-
-    public void sendTatkalAndPremiumTatkalTickets(){
+    public void sendTatkalAndPremiumTatkalTickets() {
         serviceClass.sendTatkalAndPremiumTataklTickets();
     }
 

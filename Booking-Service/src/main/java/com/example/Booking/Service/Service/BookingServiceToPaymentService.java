@@ -5,8 +5,9 @@ import com.example.Booking.Service.DTO.PaymentResponse;
 import com.example.Booking.Service.Entity.NormalReservationTickets;
 import com.example.Booking.Service.Entity.PremiumTatkalTickets;
 import com.example.Booking.Service.Entity.TatkalTickets;
+import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Feign.PaymentFeign;
-import com.example.PaymentFailedException;
+
 import feign.FeignException;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -22,12 +23,14 @@ public class BookingServiceToPaymentService {
 
     private final static Logger log = LoggerFactory.getLogger(BookingServiceToPaymentService.class);
 
-    @Autowired
     private PaymentFeign paymentFeign;
 
-
-    @Autowired
     private EntityManager entityManager;
+
+    public BookingServiceToPaymentService(EntityManager entityManager, PaymentFeign paymentFeign) {
+        this.entityManager = entityManager;
+        this.paymentFeign = paymentFeign;
+    }
 
     //    @Transactional
     public void checkEntity(TatkalTickets ticket) {
@@ -60,6 +63,7 @@ public class BookingServiceToPaymentService {
             log.info("Payment Result in BookingServiceToPaymentService finally:{}", paymentResult);
         }
     }
+
     @Transactional
     public ResponseEntity<PaymentResponse> bookPremiumTatkalTicket(PremiumTatkalTickets premiumTatkalTickets, BookingRequest request, double totalTicketAmount) throws PaymentFailedException {
         log.info("Request on BookingServiceToPaymentService");
@@ -82,6 +86,7 @@ public class BookingServiceToPaymentService {
             log.info("Payment Result in BookingServiceToPaymentService finally:{}", paymentResult);
         }
     }
+
     @Transactional
     public ResponseEntity<PaymentResponse> bookNormalTicket(NormalReservationTickets normalReservationTickets, BookingRequest request, double totalTicketAmount) throws PaymentFailedException {
         log.info("Request on BookingServiceToPaymentService");
@@ -106,6 +111,6 @@ public class BookingServiceToPaymentService {
     }
 
     public void paymentReturn(String transactionID, double eachTicketPrice) {
-        paymentFeign.paymentReturn(transactionID,eachTicketPrice);
+        paymentFeign.paymentReturn(transactionID, eachTicketPrice);
     }
 }

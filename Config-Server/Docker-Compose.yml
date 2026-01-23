@@ -1,6 +1,6 @@
 services:
   config-server:
-    image: reservation-config-server:0.4
+    image: reservation-config-server:0.3
     container_name: config-con
     environment:
       SPRING_PROFILES_ACTIVE: docker,native
@@ -28,7 +28,7 @@ services:
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
       CONFIG_SERVER_URL: http://config-server:8000
     ports:
-      - 8080:8080
+      - 8088:8088
     networks:
       - reservation-network
     depends_on:
@@ -63,14 +63,14 @@ services:
       SPRING_DATASOURCE_DATABASE: reservationdocker
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
       CONFIG_SERVER_URL: http://config-server:8000
-      KAFKA_SERVER: kafka:29092
+      KAFKA_SERVER: kafka-2:9092
     ports:
       - 8084:8084
     networks:
       - reservation-network
     depends_on:
       - config-server
-      - kafka
+
 
 
   booking-service:
@@ -83,7 +83,7 @@ services:
       SPRING_DATASOURCE_DATABASE: reservationdocker
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
       CONFIG_SERVER_URL: http://config-server:8000
-      KAFKA_SERVER: kafka:29092
+      KAFKA_SERVER: kafka-2:9092
 
     ports:
       - 8082:8082
@@ -91,7 +91,7 @@ services:
       - reservation-network
     depends_on:
       - config-server
-      - kafka
+
 
   payment-service:
     image: reservation-payment-service:0.1
@@ -130,34 +130,57 @@ services:
     networks:
       - reservation-network
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
-    container_name: zookeeper-reservation
+
+  kafka-service:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-2
     ports:
-      - "2181:2181"
+      - "9092:9092"
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-2:29093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      CLUSTER_ID: my-first-kafka-cluster
     networks:
       - reservation-network
 
-  kafka:
-    image: confluentinc/cp-kafka:7.6.1
-    container_name: kafka-reservation
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-    networks:
-      - reservation-network
+
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.6.1
+#    container_name: zookeeper-reservation
+#    ports:
+#      - "2181:2181"
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    networks:
+#      - reservation-network
+
+#  kafka:
+#    image: confluentinc/cp-kafka:7.6.1
+#    container_name: kafka-reservation
+#    depends_on:
+#      - zookeeper
+#    ports:
+#      - "9092:9092"
+#      - "29092:29092"
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+#      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+#    networks:
+#      - reservation-network
+
 
 volumes:
   reservation-mysql-data-new:

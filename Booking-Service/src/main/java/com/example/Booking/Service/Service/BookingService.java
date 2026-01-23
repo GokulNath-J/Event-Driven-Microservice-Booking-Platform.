@@ -3,13 +3,13 @@ package com.example.Booking.Service.Service;
 
 import com.example.Booking.Service.DTO.*;
 import com.example.Booking.Service.Entity.*;
+import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Feign.TrainFeign;
 import com.example.Booking.Service.Kafka.BookingEvent;
 import com.example.Booking.Service.Repository.*;
-import com.example.PaymentFailedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,45 +21,66 @@ import java.util.*;
 @Service
 public class BookingService {
 
-    private final static Logger log = LoggerFactory.getLogger(BookingService.class);
-    private static boolean isTatkalAndPremiunTatkalClosed = true;
-    private static LocalTime normalReservationClosingTime = LocalTime.of(20, 0, 0);
-    private final TatkalRepo tatkalRepo;
-    private final PremiumTatkalRepo premiumTatkalRepo;
-    private final NormalReservationRepo normalReservationRepo;
-    @Autowired
+    private TatkalRepo tatkalRepo;
+
+    private PremiumTatkalRepo premiumTatkalRepo;
+
+    private NormalReservationRepo normalReservationRepo;
+
     private BookingEvent bookingEvent;
-    @Autowired
+
     private TicketPriceRepo ticketPriceRepo;
-    //    @Autowired
-//    private Booking booking;
-    @Autowired
+
     private TrainFeign trainFeign;
-    @Autowired
+
     private TatkalService tatkalService;
-    @Autowired
+
     private PremiumTatkalService premiumTatkalService;
-    @Autowired
-    private TrainCoachNumberBookingRepo trainCoachNumberBookingRepo;
-    @Autowired
+
     private NormalReservationService normalReservationService;
-    @Autowired
-    private BookedTicketsRepo bookedTicketsRepo;
-    @Autowired
+
     private BookingServiceToPaymentService bookingServiceToPaymentService;
-    @Autowired
+
+    private BookedTicketsRepo bookedTicketsRepo;
+
+    private TrainCoachNumberBookingRepo trainCoachNumberBookingRepo;
+
     private PassengerDetailsRepo passengerDetailsRepo;
 
-    private Map<Integer, LocalDate> trainNumberAndLastTravelDate = new HashMap<>();
-
-    private Map<Integer, TrainNumberTravelDateStartingTime> trainNumberTravelDateStartingTimes = new HashMap<>();
-
-    @Autowired
-    public BookingService(TatkalRepo tatkalRepo, PremiumTatkalRepo premiumTatkalRepo, NormalReservationRepo normalReservationRepo) {
+    public BookingService(TatkalRepo tatkalRepo, PremiumTatkalRepo premiumTatkalRepo, NormalReservationRepo normalReservationRepo,
+                          BookingEvent bookingEvent, TicketPriceRepo ticketPriceRepo, TrainFeign trainFeign,
+                          TatkalService tatkalService, PremiumTatkalService premiumTatkalService,
+                          TrainCoachNumberBookingRepo trainCoachNumberBookingRepo,
+                          NormalReservationService normalReservationService, BookedTicketsRepo bookedTicketsRepo,
+                          BookingServiceToPaymentService bookingServiceToPaymentService, PassengerDetailsRepo passengerDetailsRepo) {
         this.tatkalRepo = tatkalRepo;
         this.premiumTatkalRepo = premiumTatkalRepo;
         this.normalReservationRepo = normalReservationRepo;
+        this.bookingEvent = bookingEvent;
+        this.ticketPriceRepo = ticketPriceRepo;
+        this.trainFeign = trainFeign;
+        this.tatkalService = tatkalService;
+        this.premiumTatkalService = premiumTatkalService;
+        this.trainCoachNumberBookingRepo = trainCoachNumberBookingRepo;
+        this.normalReservationService = normalReservationService;
+        this.bookedTicketsRepo = bookedTicketsRepo;
+        this.bookingServiceToPaymentService = bookingServiceToPaymentService;
+        this.passengerDetailsRepo = passengerDetailsRepo;
     }
+
+    /// //////////////////
+
+    private final static Logger log = LoggerFactory.getLogger(BookingService.class);
+
+    private static boolean isTatkalAndPremiunTatkalClosed = true;
+
+    private static LocalTime normalReservationClosingTime = LocalTime.of(20, 0, 0);
+
+    private Map<Integer, TrainNumberTravelDateStartingTime> trainNumberTravelDateStartingTimes = new HashMap<>();
+
+    private Map<Integer, LocalDate> trainNumberAndLastTravelDate = new HashMap<>();
+
+    /// ////////////////////
 
     public static boolean isIsTatkalAndPremiunTatkalClosed() {
         return isTatkalAndPremiunTatkalClosed;
@@ -202,6 +223,7 @@ public class BookingService {
     }
 
     public void addNormalReservationTickets(NormalTicketDTOWrapper normalTicketDTOWrapper) {
+        log.info("Normal Reservation Tickets In BookingService:{}", normalTicketDTOWrapper.getNormalTicketDTOQueue());
         Queue<NormalTicketDTO> normalTicketDTO = normalTicketDTOWrapper.getNormalTicketDTOQueue();
         Queue<NormalReservationTickets> reservationTickets = new LinkedList<>();
         Queue<NormalReservationTickets> reservationTicketsQueue = NormalReservationTickets.getNormalReservationTicketsQueue();
@@ -462,7 +484,7 @@ public class BookingService {
         PassengerDetails details = passengerDetailsRepo.findByPnr(bookingCancelRequestDTO.getPnr());
         log.info("BookedTicketsAndStatus:{}", bookedTicketsAndStatus);
         if (bookedTicketsAndStatus.getBookingStatus().equals(BookingStatus.CONFIRMED)) {
-            if (!bookedTicketsAndStatus.getIsCancellingTicketsClosed()) {
+            if (bookedTicketsAndStatus.getIsCancellingTicketsClosed().equals("NO")) {
                 double eachTicketPrice = bookedTicketsAndStatus.getAmount();
                 bookingServiceToPaymentService.paymentReturn(bookedTicketsAndStatus.getTransactionID(), eachTicketPrice);
                 bookedTicketsAndStatus.setBookingStatus(BookingStatus.CANCELLED);
@@ -488,7 +510,9 @@ public class BookingService {
                 bookedTicketsAndStatus.getPnr(), bookedTicketsAndStatus.getUserName(),
                 bookedTicketsAndStatus.getTrainNumber(), bookedTicketsAndStatus.getTravelDate(),
                 bookedTicketsAndStatus.getFromStationName(), bookedTicketsAndStatus.getToStationName(), 1,
-                bookedTicketsAndStatus.getBookingMethod(), bookedTicketsAndStatus.getAmount(), bookedTicketsAndStatus.getWaitingToConfirmTicket(), bookedTicketsAndStatus.getTransactionID(), BookingStatus.CANCELLED, List.of(detailsResponse));
+                bookedTicketsAndStatus.getBookingMethod(), bookedTicketsAndStatus.getAmount(),
+                bookedTicketsAndStatus.getWaitingToConfirmTicket(), bookedTicketsAndStatus.getTransactionID(),
+                BookingStatus.CANCELLED, List.of(detailsResponse));
         bookingEvent.sendBookingResponseToUser(response);
 
     }
@@ -506,13 +530,24 @@ public class BookingService {
                                 && ticketsAndStatus.getToStationName().equals(bookedTicketsAndStatus.getToStationName())) {
                             ticketsAndStatus.setBookingStatus(BookingStatus.CONFIRMED);
                             ticketsAndStatus.setWaitingToConfirmTicket("YES");
-                            PassengerDetails newPassengerDetails = passengerDetailsRepo.findByPnr(ticketsAndStatus.getPnr());
-                            newPassengerDetails.setCoachName(details.getCoachName());
-                            newPassengerDetails.setCoachNumber(details.getCoachNumber());
-                            newPassengerDetails.setSeatNumber(details.getSeatNumber());
-                            details.setSeatNumber(0);
-                            details.setCoachName("Null");
-                            details.setCoachNumber("Null");
+//                            PassengerDetails newPassengerDetails = passengerDetailsRepo.findByPnr(ticketsAndStatus.getPnr());
+                            details.setSeatNumber(passengerDetails.getSeatNumber());
+                            details.setCoachName(passengerDetails.getCoachName());
+                            details.setCoachNumber(passengerDetails.getCoachNumber());
+                            passengerDetails.setCoachName("NUL");
+                            passengerDetails.setCoachNumber("NULL");
+                            passengerDetails.setSeatNumber(0);
+                            PassengerDetailsResponse detailsResponse = new PassengerDetailsResponse(
+                                    details.getPnr(), details.getPassengerName(), details.getGender(), details.getAge(),
+                                    details.getCoachName(), details.getCoachNumber(), details.getSeatNumber());
+                            BookingResponse response = new BookingResponse(
+                                    details.getPnr(), bookedTicketsAndStatus.getUserName(),
+                                    ticketsAndStatus.getTrainNumber(), ticketsAndStatus.getTravelDate(),
+                                    ticketsAndStatus.getFromStationName(), ticketsAndStatus.getToStationName(), 1,
+                                    ticketsAndStatus.getBookingMethod(), ticketsAndStatus.getAmount(),
+                                    ticketsAndStatus.getWaitingToConfirmTicket(), ticketsAndStatus.getTransactionID(),
+                                    ticketsAndStatus.getBookingStatus(), List.of(detailsResponse));
+                            bookingEvent.sendBookingResponseToUser(response);
                         }
                     }
                 }
@@ -566,12 +601,79 @@ public class BookingService {
         List<BookedTicketsAndStatus> bookedTickets = bookedTicketsRepo.findAllByTrainNumberAndTravelDate(trainNumber, travelDate);
         log.info("bookedTickets:{}", bookedTickets);
         for (BookedTicketsAndStatus bookedTicket : bookedTickets) {
-            bookedTicket.setIsCancellingTicketsClosed(true);
+            bookedTicket.setIsCancellingTicketsClosed("YES");
         }
     }
 
     @Transactional
     public void clearNormalTickets(Integer trainNumber, LocalDate travelDate) {
         normalReservationRepo.deleteAllByTrainNumberAndTravelDate(trainNumber, travelDate);
+    }
+
+    public List<NormalTicketDTO> getTrainForNormalBookingByTrainNumber(TrainDetailsRequest request) {
+        log.info("In the BookingService");
+        List<NormalReservationTickets> ticketsList = normalReservationRepo.findAllByTrainNumberAndTravelDate(request.getTrainNumber(), request.getTravelDate());
+        List<NormalTicketDTO> dtoList = new ArrayList<>();
+        for (NormalReservationTickets tickets : ticketsList) {
+            if (tickets.getStationName().equals(request.getFromStation()) || tickets.getStationName().equals(request.getDestinationStation())) {
+                NormalTicketDTO list = NormalTicketDTO.builder()
+                        .train_number(tickets.getTrainNumber())
+                        .booking_type(tickets.getBookingType())
+                        .arrivalDateTime(tickets.getArrivalDateTime())
+                        .departureDateTime(tickets.getDepartureDateTime())
+                        .coach_name(tickets.getCoachName())
+                        .each_seat_price(tickets.getEachSeatPrice())
+                        .travelDate(tickets.getTravelDate())
+                        .total_no_of_seats(tickets.getNoOfSeatsAvailable())
+                        .startingTime(tickets.getStartingTime())
+                        .station_name(tickets.getStationName())
+                        .build();
+                dtoList.add(list);
+            }
+        }
+        return dtoList;
+    }
+
+    public List<NormalTicketDTO> getTrainForTatkalBookingByTrainNumber(TrainDetailsRequest request) {
+        List<TatkalTickets> tatkalTickets = tatkalRepo.findAllByTrainNumber(request.getTrainNumber());
+
+//        Optional<TatkalTickets> tatkalTickets = tatkalRepo.findByTrainNumber(request.getTrainNumber());
+
+        List<NormalTicketDTO> list = new ArrayList<>();
+        for (TatkalTickets tatkalTicket : tatkalTickets) {
+            if (tatkalTicket.getStationName().equals(request.getFromStation()) || tatkalTicket.getStationName().equals(request.getDestinationStation())) {
+                NormalTicketDTO dto = NormalTicketDTO.builder()
+                        .train_number(tatkalTicket.getTrainNumber())
+                        .booking_type(tatkalTicket.getBookingType())
+                        .coach_name(tatkalTicket.getCoachName())
+                        .each_seat_price(tatkalTicket.getEachSeatPrice())
+                        .total_no_of_seats(tatkalTicket.getNoOfSeatsAvailable())
+                        .station_name(tatkalTicket.getStationName())
+                        .build();
+                list.add(dto);
+            }
+        }
+        return list;
+    }
+
+    public List<NormalTicketDTO> getTrainForPremiumTatkalBookingByTrainNumber(TrainDetailsRequest request) {
+
+        List<PremiumTatkalTickets> tatkalTickets = premiumTatkalRepo.findAllByTrainNumber(request.getTrainNumber());
+
+        List<NormalTicketDTO> list = new ArrayList<>();
+        for (PremiumTatkalTickets tatkalTicket : tatkalTickets) {
+            if (tatkalTicket.getStationName().equals(request.getFromStation()) || tatkalTicket.getStationName().equals(request.getDestinationStation())) {
+                NormalTicketDTO dto = NormalTicketDTO.builder()
+                        .train_number(tatkalTicket.getTrainNumber())
+                        .booking_type(tatkalTicket.getBookingType())
+                        .coach_name(tatkalTicket.getCoachName())
+                        .each_seat_price(tatkalTicket.getEachSeatPrice())
+                        .total_no_of_seats(tatkalTicket.getNoOfSeatsAvailable())
+                        .station_name(tatkalTicket.getStationName())
+                        .build();
+                list.add(dto);
+            }
+        }
+        return list;
     }
 }

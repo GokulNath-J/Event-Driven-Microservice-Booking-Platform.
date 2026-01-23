@@ -1,4 +1,5 @@
-package com.example.Payment_Service.ExceptionHandlingPackage;
+package com.example.User_Service.ExceptionHandlerPackage;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +19,4 @@ public class PaymentExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 
-    @ExceptionHandler(PasswordIncorrectException.class)
-    public ResponseEntity<String> handlePasswordIncorrect(PasswordIncorrectException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
 }

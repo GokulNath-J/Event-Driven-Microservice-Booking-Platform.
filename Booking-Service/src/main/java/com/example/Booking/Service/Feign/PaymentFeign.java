@@ -1,9 +1,7 @@
 package com.example.Booking.Service.Feign;
 
 import com.example.Booking.Service.DTO.PaymentResponse;
-import com.example.InsufficientBalanceException;
-import com.example.PasswordIncorrectException;
-import com.example.PaymentFailedException;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

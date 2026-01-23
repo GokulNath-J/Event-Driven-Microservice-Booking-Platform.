@@ -1,4 +1,5 @@
 package com.example.Train_Service.Entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 

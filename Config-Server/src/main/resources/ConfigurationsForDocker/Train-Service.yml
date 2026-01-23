@@ -36,6 +36,8 @@ spring:
 logging:
   file:
     name: Train-Service.log
+  level:
+    org.springframework.cloud.openfeign: DEBUG
 server:
   port: '8081'
 eureka:

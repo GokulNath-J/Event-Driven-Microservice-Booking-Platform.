@@ -1,4 +1,4 @@
-package com.example.Booking.Service.DTO;
+package com.example.User_Service.DTO;
 
 import lombok.*;
 
@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @ToString
 @Builder
-public class NormalTicketDTO {
+public class TicketDTO {
 
     private Integer train_number;
     private String booking_type;

@@ -1,8 +1,7 @@
 package com.example.Booking.Service.ExceptionHandlerPackage;
 
 
-import com.example.InsufficientBalanceException;
-import com.example.PaymentFailedException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

@@ -23,15 +23,18 @@ public class BookedTicketsService {
 
     private final Logger log = LoggerFactory.getLogger(BookedTicketsService.class);
 
-    @Autowired
     private BookedTicketsRepo bookedTicketsRepo;
 
-    @Autowired
     private TrainCoachNumberBookingRepo trainCoachNumberBookingRepo;
 
-    @Autowired
     private BookingEvent bookingEvent;
 
+    public BookedTicketsService(BookedTicketsRepo bookedTicketsRepo, TrainCoachNumberBookingRepo trainCoachNumberBookingRepo,
+                                BookingEvent bookingEvent) {
+        this.bookedTicketsRepo = bookedTicketsRepo;
+        this.trainCoachNumberBookingRepo = trainCoachNumberBookingRepo;
+        this.bookingEvent = bookingEvent;
+    }
 
     //private List<TrainCoachNumberBooking> trainCoachNumberBookings = trainCoachNumberBookingRepo.findAll();
     @Transactional(propagation = Propagation.REQUIRED)
@@ -47,7 +50,7 @@ public class BookedTicketsService {
             String pnr = UUID.randomUUID().toString().substring(0, 11).replace("-", "");
             bookedTicketsAndStatus.setPnr(pnr);
             bookedTicketsAndStatus.setTransactionID(transactionID);
-            bookedTicketsAndStatus.setIsCancellingTicketsClosed(false);
+            bookedTicketsAndStatus.setIsCancellingTicketsClosed("NO");
             // PassengerDetails passengerDetails = new PassengerDetails(detailsDTO.getPassengerName(),detailsDTO.getGender(),detailsDTO.getAge());
             if (bookingStatus.equals(BookingStatus.CONFIRMED)) {
                 PassengerDetails passengerDetails = addTrainCoachAndSeatNumber(bookedTicketsAndStatus, request);

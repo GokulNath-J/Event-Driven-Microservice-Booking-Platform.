@@ -5,9 +5,9 @@ import com.example.Booking.Service.DTO.BookingStatus;
 import com.example.Booking.Service.DTO.PaymentResponse;
 import com.example.Booking.Service.DTO.TicketPrice;
 import com.example.Booking.Service.Entity.NormalReservationTickets;
+import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Repository.NormalReservationRepo;
 import com.example.Booking.Service.Repository.TicketPriceRepo;
-import com.example.PaymentFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +27,22 @@ public class NormalReservationService {
 
     private final static Logger log = LoggerFactory.getLogger(NormalReservationService.class);
 
-    @Autowired
     private NormalReservationRepo normalReservationRepo;
 
-    @Autowired
     private TicketPriceRepo ticketPriceRepo;
 
-    @Autowired
     private BookingServiceToPaymentService bookingServiceToPaymentService;
 
-    @Autowired
     private BookedTicketsService bookedTicketsService;
+
+    public NormalReservationService(NormalReservationRepo normalReservationRepo, TicketPriceRepo ticketPriceRepo,
+                                    BookingServiceToPaymentService bookingServiceToPaymentService,
+                                    BookedTicketsService bookedTicketsService) {
+        this.normalReservationRepo = normalReservationRepo;
+        this.ticketPriceRepo = ticketPriceRepo;
+        this.bookingServiceToPaymentService = bookingServiceToPaymentService;
+        this.bookedTicketsService = bookedTicketsService;
+    }
 
     public ResponseEntity<String> bookNormalReservationTickets(BookingRequest request) throws PaymentFailedException {
         log.info("BookingRequest:{}", request);
@@ -143,7 +148,7 @@ public class NormalReservationService {
         NormalReservationTickets normalReservationTickets = null;
         for (NormalReservationTickets reservationTickets : normalReservationTicketsList) {
             if (reservationTickets.getTravelDate().equals(travelDate)
-                    &&reservationTickets.getStationName().equalsIgnoreCase(toStationName)
+                    && reservationTickets.getStationName().equalsIgnoreCase(toStationName)
                     && reservationTickets.getCoachName().equalsIgnoreCase(coachName)) {
                 normalReservationTickets = reservationTickets;
             }

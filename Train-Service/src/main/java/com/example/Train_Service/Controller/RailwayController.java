@@ -26,14 +26,13 @@ public class RailwayController {
 
     private static Logger log = LoggerFactory.getLogger(RailwayController.class);
 
-    private final ServiceClass serviceClass;
+    private ServiceClass serviceClass;
 
-    @Autowired
     public RailwayController(ServiceClass serviceClass) {
         this.serviceClass = serviceClass;
     }
 
-    @GetMapping("/getall")
+    @GetMapping("/getallTrains")
     public ResponseEntity<List<TrainDetails>> getall() {
         return serviceClass.GetAll();
     }
@@ -43,6 +42,63 @@ public class RailwayController {
         return serviceClass.AddOneTrain(trainDetails);
     }
 
+    @GetMapping("/sendNormalTicketsToBookingServiceManually")
+    public void sendNormalTicketsToBookingServiceManually(@RequestParam int trainNumber) {
+        serviceClass.addDatesToNormalTickets(trainNumber);
+    }
+
+    @DeleteMapping("/deleteTrainByTrainNumber")
+    public ResponseEntity<String> deleteTrainByTrainNumber(@RequestParam Integer trainNumber) {
+        return serviceClass.deleteTrainByTrainNumber(trainNumber);
+    }
+
+    @GetMapping("/sendTrainCoachNumberDTO")
+    public List<TrainCoachNumberDTO> sendTrainCoachNumberDTO(@RequestParam Integer trainNumber) {
+        return serviceClass.sendTrainCoachNumberDTO(trainNumber);
+    }
+
+    @GetMapping("/getTrainByTrainNumber")
+    public TrainDetails getTrainByTrainNumber(@RequestParam Integer trainNumber) {
+        return serviceClass.getTrainByTrainNumber(trainNumber);
+    }
+
+
+    @PostMapping("/getNextNormalReservationTickets")
+    public NormalTicketDTOWrapper getNextNormalReservationTickets(@RequestBody Map<Integer, LocalDate> trainNumberAndLastTravelDay) {
+        log.info("Request in Controller");
+        return serviceClass.getNextNormalReservationTickets(trainNumberAndLastTravelDay);
+    }
+
+    @GetMapping("/sendTatkalAndPremiumTataklTicketsToBookingServiceManually")
+    public List<PremiumAndTatkalDTO> sendTatkalAndPremiumTataklTicketsToBookingServiceManually() {
+        return serviceClass.sendTatkalAndPremiumTataklTickets();
+    }
+
+    @GetMapping("/verifyTicketsPerStation")
+    public void testtickets() {
+        serviceClass.verifyTicketsPerStation();
+    }
+
+    @GetMapping("/verifyTrain")
+    public void verifyTrain() {
+        serviceClass.verifyTrain();
+    }
+
+
+//    @PostMapping("/book")
+//    public void bookTicket(@RequestParam Integer trainNumber, @RequestParam String coach,
+//                           @RequestParam List<String> passengers_name,
+//                           @RequestParam Integer noOfTickets, @RequestParam Integer amount,
+//                           @RequestParam String bookingType, @RequestParam String date,
+//                           @RequestParam String fromstation, @RequestParam String destination) {
+//        serviceClass.bookTicket(trainNumber, coach, passengers_name, noOfTickets, amount, bookingType, date, fromstation, destination);
+//    }
+
+
+//    @GetMapping("/testSendingTrainDTO")
+//    public void testSendingTrainDTO() {
+//        serviceClass.testingSendTrainDTO();
+//    }
 //   @PostMapping("/addalltrain")
 //   @ResponseStatus(HttpStatus.CREATED)
 //   public String addallrail(@RequestBody List<TrainDetails> trainDetails){
@@ -81,25 +137,13 @@ public class RailwayController {
 //        return serviceClass.delete_train_trainid(train_number);
 //    }
 //
+
 //   @GetMapping("/Check_Train_From_Startinpoint")
+
 //   public ResponseEntity<List<TrainWrapper>> Check_Train_From_Startinpoint(@RequestParam String startingpoint){
+
 //        return serviceClass.check_train_from_startingpoint(startingpoint);
 //   }
-
-    @PostMapping("/book")
-    public void bookTicket(@RequestParam Integer trainNumber, @RequestParam String coach,
-                           @RequestParam List<String> passengers_name,
-                           @RequestParam Integer noOfTickets, @RequestParam Integer amount,
-                           @RequestParam String bookingType, @RequestParam String date,
-                           @RequestParam String fromstation, @RequestParam String destination) {
-        serviceClass.bookTicket(trainNumber, coach, passengers_name, noOfTickets, amount, bookingType, date, fromstation, destination);
-    }
-
-    @GetMapping("/testSendingTrainDTO")
-    public void testSendingTrainDTO() {
-        serviceClass.testingSendTrainDTO();
-    }
-
 //    @GetMapping("/testSendingTrainDTO1")
 //    public void testSendingTrainDTO1() {
 //        serviceClass.testingSendTrainDTO4();
@@ -112,62 +156,22 @@ public class RailwayController {
 //
 //    @GetMapping("/testSendingTrainDTO3")
 //    public void testSendingTrainDTO3() {
+
 //        serviceClass.testingSendTrainDTO3();
+
 //    }
-
-    @GetMapping("/verifyTicketsPerStation")
-    public void testtickets() {
-        serviceClass.verifyTicketsPerStation();
-    }
-
-    @GetMapping("/verifyTrain")
-    public void verifyTrain() {
-        serviceClass.verifyTrain();
-    }
-
 //    @GetMapping("/sendTatkalAndPremiumTataklTicketsToBookingServiceManually")
 //    public PremiumAndTatkalDTOWrapper sendTrainDTOToBookingServiceManually() {
 //        PremiumAndTatkalDTOWrapper premiumAndTatkalDTOWrapper = new PremiumAndTatkalDTOWrapper(serviceClass.sendTatkalAndPremiumTataklTickets());
 //        return premiumAndTatkalDTOWrapper;
-//    }
 
+//    }
 //    @GetMapping("/sendNormalTicketsToBookingServiceManually")
 //    public PremiumAndTatkalDTOWrapper sendNormalTicketsToBookingServiceManually() {
 //        PremiumAndTatkalDTOWrapper trainDTOWrapper = new PremiumAndTatkalDTOWrapper(serviceClass.createNormalTickts());
 //        return trainDTOWrapper;
+
 //    }
-
-    @GetMapping("/sendNormalTicketsToBookingServiceManually")
-    public void sendNormalTicketsToBookingServiceManually(@RequestParam int trainNumber) {
-        serviceClass.addDatesToNormalTickets(trainNumber);
-    }
-
-    @DeleteMapping("/deleteTrainByTrainNumber")
-    public ResponseEntity<String> deleteTrainByTrainNumber(@RequestParam Integer trainNumber) {
-        return serviceClass.deleteTrainByTrainNumber(trainNumber);
-    }
-
-    @GetMapping("/sendTrainCoachNumberDTO")
-    public List<TrainCoachNumberDTO> sendTrainCoachNumberDTO(@RequestParam Integer trainNumber) {
-        return serviceClass.sendTrainCoachNumberDTO(trainNumber);
-    }
-
-    @GetMapping("/getTrainByTrainNumber")
-    public TrainDetails getTrainByTrainNumber(@RequestParam Integer trainNumber) {
-        return serviceClass.getTrainByTrainNumber(trainNumber);
-    }
-
-
-    @PostMapping("/getNextNormalReservationTickets")
-    public NormalTicketDTOWrapper getNextNormalReservationTickets(@RequestBody Map<Integer, LocalDate> trainNumberAndLastTravelDay) {
-        log.info("Request in Controller");
-        return serviceClass.getNextNormalReservationTickets(trainNumberAndLastTravelDay);
-    }
-
-    @GetMapping("/sendTatkalAndPremiumTataklTicketsToBookingServiceManually")
-    public List<PremiumAndTatkalDTO> sendTatkalAndPremiumTataklTicketsToBookingServiceManually() {
-        return serviceClass.sendTatkalAndPremiumTataklTickets();
-    }
 
 
 }
