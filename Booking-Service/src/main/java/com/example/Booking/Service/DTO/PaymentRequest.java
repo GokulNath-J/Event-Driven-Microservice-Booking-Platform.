@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PaymentRequest {
     
-    private String userName;
-    private Integer phoneNumber;
+    private String userId;
     private String password;
-    private double amount;
+    private Double amount;
 }

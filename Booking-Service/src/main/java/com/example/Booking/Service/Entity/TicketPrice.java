@@ -1,4 +1,4 @@
-package com.example.Booking.Service.DTO;
+package com.example.Booking.Service.Entity;
 
 
 import jakarta.persistence.Entity;
@@ -8,9 +8,7 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity

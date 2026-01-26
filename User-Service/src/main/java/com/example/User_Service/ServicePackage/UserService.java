@@ -4,7 +4,6 @@ package com.example.User_Service.ServicePackage;
 import com.example.User_Service.DTO.*;
 import com.example.User_Service.Entity.NewUserRegister;
 import com.example.User_Service.Entity.UserLoginStatus;
-import com.example.User_Service.ExceptionHandlerPackage.BookingFailedException;
 import com.example.User_Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.User_Service.OpenFeign.BookingFeign;
 import com.example.User_Service.OpenFeign.PaymentFeign;
@@ -13,7 +12,6 @@ import com.example.User_Service.Repository.UserRepository;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -110,45 +108,45 @@ public class UserService {
         return false;
     }
 
-    public ResponseEntity<String> confirmBooking(BookingRequest request) throws FeignException, PaymentFailedException {
+    public ResponseEntity<TicketsResponse> confirmBooking(BookingRequest request) throws FeignException, PaymentFailedException {
         log.info("request in the UserService");
-        if (checkUserIsActive(request.getUserName())) {
+        if (checkUserIsActive(request.getUserId())) {
             String result = "";
             String bookingtype = request.getBookingMethod();
-            ResponseEntity<String> responseEntity;
+            TicketsResponse response = null;
             if (bookingtype.equals("Normal Reservation")) {
-                responseEntity = bookingFeign.bookNormalReservation(request);
-                result = responseEntity.getBody();
-                return responseEntity;
+                response = bookingFeign.bookNormalReservation(request).getBody();
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
             } else if (bookingtype.equals("Tatkal") || bookingtype.equals("Premium Tatkal")) {
-                responseEntity = bookingFeign.bookPremiumAndTatkal(request);
-                result = responseEntity.getBody();
-                return responseEntity;
+                response = bookingFeign.bookPremiumAndTatkal(request).getBody();
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
             }
+        } else {
+            throw new RuntimeException("User Not ACTIVE");
         }
-        return ResponseEntity.badRequest().body("User Not ACTIVE");
+        throw new RuntimeException("Check the request again");
     }
 
-    public boolean checkUserIsActive(String userName) {
-        Optional<UserLoginStatus> loginStatus = userLoginStatusRepo.findByUserName(userName);
+    public boolean checkUserIsActive(String userId) {
+        Optional<UserLoginStatus> loginStatus = userLoginStatusRepo.findByUserId(userId);
         if (loginStatus.isPresent() && loginStatus.get().getLoggedInStatus().equals(LoginStatus.ACTIVE)) {
             return true;
         }
         return false;
     }
 
-    public String createNewEWallet(String username, String password) {
-        if (checkUserIsActive(username)) {
-            Optional<NewUserRegister> user = userRepository.findByUserName(username);
-            return paymentFeign.createNewEWallet(username, user.get().getUserId(), password);
+    public String createNewEWallet(String userId, String password) {
+        if (checkUserIsActive(userId)) {
+            Optional<NewUserRegister> user = userRepository.findByUserId(userId);
+            return paymentFeign.createNewEWallet(userId, user.get().getUserId(), password);
         } else {
             return "User Not Found";
         }
     }
 
-    public String addMoneyToEWallet(String username, double amount) {
-        if (checkUserIsActive(username)) {
-            Optional<NewUserRegister> user = userRepository.findByUserName(username);
+    public String addMoneyToEWallet(String userId, double amount) {
+        if (checkUserIsActive(userId)) {
+            Optional<NewUserRegister> user = userRepository.findByUserId(userId);
             return paymentFeign.addMoneyToEWallet(user.get().getUserId(), amount);
         } else {
             return "User Not Found";
@@ -173,6 +171,10 @@ public class UserService {
     public ResponseEntity<List<TicketDTO>> getTrainForPremiumTatkalBookingByTrainNumber(TrainDetailsRequest request) {
         List<TicketDTO> ticketDTO = bookingFeign.getTrainForPremiumTatkalBookingByTrainNumber(request);
         return new ResponseEntity<>(ticketDTO, HttpStatus.FOUND);
+    }
+
+    public ResponseEntity<String> confirmOrCancelRequest(ConfirmOrCancelRequest request) {
+        return bookingFeign.confirmOrCancelRequest(request);
     }
 
 //    public String addEWallet(String username, EWalletDTO eWallet){

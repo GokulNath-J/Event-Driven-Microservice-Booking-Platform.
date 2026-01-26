@@ -1,5 +1,6 @@
 package com.example.User_Service.Entity;
 
+import com.example.User_Service.DTO.BookingStatus;
 import com.example.User_Service.DTO.LoginStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ public class UserLoginStatus {
     private String userName;
 
     @Enumerated(EnumType.STRING)
-    private LoginStatus loggedInStatus;
+    private LoginStatus loggedInStatus = LoginStatus.INACTIVE;
     private LocalDateTime loggedInDateTime;
     private LocalDateTime loggedOutDateTime;
 

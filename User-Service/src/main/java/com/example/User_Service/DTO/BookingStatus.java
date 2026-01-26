@@ -2,5 +2,5 @@ package com.example.User_Service.DTO;
 
 public enum BookingStatus {
 
-    CONFIRMED,WAITING,CANCELLED
+    CONFIRMED, WAITING, CANCELLED, YES, NO
 }

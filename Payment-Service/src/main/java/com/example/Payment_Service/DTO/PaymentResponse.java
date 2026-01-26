@@ -1,6 +1,7 @@
 package com.example.Payment_Service.DTO;
 
 
+import com.example.Payment_Service.Entity.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class PaymentResponse {
 
 
-    private String paymentStatus;
+    private TransactionStatus paymentStatus;
     private String transactionID;
 
 }

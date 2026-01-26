@@ -11,7 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingRequest {
-    private String userName;
+
+    private String userId;
     private Integer trainNumber;
     private LocalDate travelDate; // yyyy-MM-dd
     private String coachName;

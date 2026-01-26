@@ -24,4 +24,5 @@ public interface NormalReservationRepo extends JpaRepository<NormalReservationTi
 
     void deleteAllByTrainNumberAndTravelDate(Integer trainNumber, LocalDate travelDate);
 
+    List<NormalReservationTickets> findAllByTravelDate(LocalDate currentDate);
 }

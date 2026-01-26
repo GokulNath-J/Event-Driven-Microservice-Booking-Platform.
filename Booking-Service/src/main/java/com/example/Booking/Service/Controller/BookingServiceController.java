@@ -1,10 +1,7 @@
 package com.example.Booking.Service.Controller;
 
 import com.example.Booking.Service.DTO.*;
-import com.example.Booking.Service.Entity.BookedTicketsAndStatus;
-import com.example.Booking.Service.Entity.NormalReservationTickets;
-import com.example.Booking.Service.Entity.PremiumTatkalTickets;
-import com.example.Booking.Service.Entity.TatkalTickets;
+import com.example.Booking.Service.Entity.*;
 import com.example.Booking.Service.ExceptionHandlerPackage.PaymentFailedException;
 import com.example.Booking.Service.Service.BookingService;
 
@@ -36,12 +33,12 @@ public class BookingServiceController {
     }
 
     @PostMapping("/bookPremiumAndTatkal")
-    public ResponseEntity<String> bookPremiumAndTatkal(@RequestBody BookingRequest request) throws PaymentFailedException {
+    public ResponseEntity<TicketsResponse> bookPremiumAndTatkal(@RequestBody BookingRequest request) throws PaymentFailedException {
         return bookingService.bookPremiumAndTatkal(request);
     }
 
     @PostMapping("/bookNormalReservation")
-    public ResponseEntity<String> bookNormalReservation(@RequestBody BookingRequest request) throws PaymentFailedException {
+    public ResponseEntity<TicketsResponse> bookNormalReservation(@RequestBody BookingRequest request) throws PaymentFailedException {
         return bookingService.bookNormalReservation(request);
     }
 
@@ -128,11 +125,20 @@ public class BookingServiceController {
         return bookingService.getTrainForTatkalBookingByTrainNumber(request);
     }
 
-    @PostMapping("/booking/getTrainForPremiumTatkalBookingByTrainNumber")
+    @PostMapping("/getTrainForPremiumTatkalBookingByTrainNumber")
     public List<NormalTicketDTO> getTrainForPremiumTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
         return bookingService.getTrainForPremiumTatkalBookingByTrainNumber(request);
     }
 
+    @PostMapping("/confirmOrCancelRequest")
+    public ResponseEntity<String> confirmOrCancelRequest(@RequestBody ConfirmOrCancelRequest request) throws PaymentFailedException {
+        return bookingService.confirmOrCancelRequest(request);
+    }
+
+    @GetMapping("/getTrainNumberTravelDateStartingTime")
+    public Map<Integer, TrainNumberTravelDateStartingTime> getTrainNumberTravelDateStartingTime() {
+        return bookingService.getTrainNumberTravelDateStartingTimes();
+    }
 
     //    @PostMapping("/addtickets")
 //    public String addTatkalTickets(){

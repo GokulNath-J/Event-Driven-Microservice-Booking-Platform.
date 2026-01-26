@@ -35,13 +35,13 @@ public class UserController {
     }
 
     @PostMapping("/book")
-    public ResponseEntity<String> booking(@RequestBody BookingRequest request) throws PaymentFailedException {
+    public ResponseEntity<TicketsResponse> booking(@RequestBody BookingRequest request) throws PaymentFailedException {
         return userService.confirmBooking(request);
     }
 
     @PostMapping("/createNewEWallet")
-    public String createNewEWallet(@RequestParam String username, @RequestParam String password) {
-        return userService.createNewEWallet(username, password);
+    public String createNewEWallet(@RequestParam String userId, @RequestParam String password) {
+        return userService.createNewEWallet(userId, password);
     }
 
     @GetMapping("/gg")
@@ -50,8 +50,8 @@ public class UserController {
     }
 
     @PostMapping("/addMoneyToEWallet")
-    public String addMoneyToEWallet(@RequestParam String username, @RequestParam double amount) {
-        return userService.addMoneyToEWallet(username, amount);
+    public String addMoneyToEWallet(@RequestParam String userId, @RequestParam double amount) {
+        return userService.addMoneyToEWallet(userId, amount);
     }
 
     @PutMapping("/bookingCancelRequest")
@@ -72,5 +72,11 @@ public class UserController {
     @PostMapping("/getTrainForPremiumTatkalBookingByTrainNumber")
     public ResponseEntity<List<TicketDTO>> getTrainForPremiumTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request) {
         return userService.getTrainForPremiumTatkalBookingByTrainNumber(request);
+    }
+
+
+    @PostMapping("/confirmOrCancelRequest")
+    public ResponseEntity<String> confirmOrCancelRequest(@RequestBody ConfirmOrCancelRequest request){
+        return userService.confirmOrCancelRequest(request);
     }
 }

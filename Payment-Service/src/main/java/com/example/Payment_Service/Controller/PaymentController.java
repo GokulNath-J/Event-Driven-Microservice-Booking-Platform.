@@ -5,6 +5,7 @@ package com.example.Payment_Service.Controller;
 //import com.example.PasswordIncorrectException;
 //import com.example.PaymentFailedException;
 
+import com.example.Payment_Service.DTO.PaymentRequest;
 import com.example.Payment_Service.DTO.PaymentResponse;
 import com.example.Payment_Service.ExceptionHandlingPackage.InsufficientBalanceException;
 import com.example.Payment_Service.ExceptionHandlingPackage.PasswordIncorrectException;
@@ -40,8 +41,8 @@ public class PaymentController {
 //       return paymentServiceClass.paymentRequest(paymentRequest);
 //    }
     @PostMapping("/paymentRequest")
-    public ResponseEntity<PaymentResponse> paymentRequest(@RequestParam String userName, @RequestParam double totalTicketAmount) throws InsufficientBalanceException, PasswordIncorrectException, PaymentFailedException {
-        return paymentServiceClass.paymentRequest(userName, totalTicketAmount);
+    public ResponseEntity<PaymentResponse> paymentRequest(@RequestBody PaymentRequest request) throws InsufficientBalanceException, PasswordIncorrectException, PaymentFailedException {
+        return paymentServiceClass.paymentRequest(request.getUserId(), request.getAmount(), request.getPassword());
     }
 
     @PostMapping("/paymentReturn")

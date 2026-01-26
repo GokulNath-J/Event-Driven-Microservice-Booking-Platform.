@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 public class PaymentRequest {
 
     private String userId;
-    private Integer phoneNumber;
     private String password;
     private double amount;
 }

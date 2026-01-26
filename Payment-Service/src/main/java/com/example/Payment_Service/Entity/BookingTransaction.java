@@ -16,7 +16,7 @@ public class BookingTransaction {
     @GeneratedValue(generator = "bk", strategy = GenerationType.SEQUENCE)
     private int id;
     private String transactionID;
-    private String userName;
+    private String userId;
     private double amount;
     private double amountReturned;
     private double amountAfterReturned;

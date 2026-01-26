@@ -8,8 +8,11 @@ import com.example.Booking.Service.Feign.TrainFeign;
 import com.example.Booking.Service.Kafka.BookingEvent;
 import com.example.Booking.Service.Repository.*;
 
+import com.example.Booking.Service.ScheduledMethodsPackage.ScheduledEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +49,18 @@ public class BookingService {
     private TrainCoachNumberBookingRepo trainCoachNumberBookingRepo;
 
     private PassengerDetailsRepo passengerDetailsRepo;
+
+    @Autowired
+    private CalculatedAmountRepo calculatedAmountRepo;
+
+    @Autowired
+    private BookedTicketsService bookedTicketsService;
+
+    @Autowired
+    private BookingRequestTableRepo requestTableRepo;
+
+    @Autowired
+    private LocalNormalReservationService localNormalReservationService;
 
     public BookingService(TatkalRepo tatkalRepo, PremiumTatkalRepo premiumTatkalRepo, NormalReservationRepo normalReservationRepo,
                           BookingEvent bookingEvent, TicketPriceRepo ticketPriceRepo, TrainFeign trainFeign,
@@ -122,14 +137,28 @@ public class BookingService {
         premiumTatkalRepo.saveAll(premiunTataklList);
     }
 
-    public ResponseEntity<String> bookPremiumAndTatkal(BookingRequest request) throws PaymentFailedException {
+    public ResponseEntity<TicketsResponse> bookPremiumAndTatkal(BookingRequest request) throws PaymentFailedException {
         log.info("request in the BookingService");
         if ((isTatkalAndPremiunTatkalClosed != true) && request.getBookingMethod().equalsIgnoreCase("Tatkal")) {
-            return tatkalService.book(request);
+            return tatkalService.book(request, null, null);
         } else if ((isTatkalAndPremiunTatkalClosed != true) && request.getBookingMethod().equalsIgnoreCase("Premium Tatkal")) {
-            return premiumTatkalService.book(request);
+            return premiumTatkalService.book(request, null, null);
+        } else {
+            throw new RuntimeException("Send the Correct Request");
         }
-        return ResponseEntity.badRequest().body("Booking Not Yet Openned Or Select the right BookingRequest");
+    }
+
+    private Boolean checkNormalReservationClosingTime(Integer trainNumber, LocalDate travelDate) {
+        for (TrainNumberTravelDateStartingTime value : trainNumberTravelDateStartingTimes.values()) {
+            if (value.getTrainNumber().equals(trainNumber) && value.getTravelDate().equals(travelDate)) {
+                if (value.getIsBookingClosed().equals(true)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        throw new RuntimeException("Select the Correct Train Number or Travel Date");
     }
 
     public String getTrainCoachNumberDTOManually(Integer trainNumber) {
@@ -161,47 +190,6 @@ public class BookingService {
         ticketPriceRepo.save(ticketPrice);
     }
 
-
-//    public HashMap<Integer, List<PremiumAndTatkalDTO>> getNormalTicketsManually() {
-//        HashMap<Integer, List<PremiumAndTatkalDTO>> trainDTO1 = trainFeign.sendNormalTicketsToBookingServiceManually().getHashMap();
-//        addNormalTickets(trainDTO1);
-//        return trainDTO1;
-//    }
-
-    //    private void addNormalTickets(HashMap<Integer, List<PremiumAndTatkalDTO>> trainDTO1) {
-//        List<NormalReservationTickets> normalReservationTicketsList = new ArrayList<>();
-//        for (Map.Entry<Integer, List<PremiumAndTatkalDTO>> listEntry : trainDTO1.entrySet()) {
-//            List<PremiumAndTatkalDTO> dto1List = listEntry.getValue();
-//            for (PremiumAndTatkalDTO dto1 : dto1List) {
-//                NormalReservationTickets normalReservationTickets = new NormalReservationTickets
-//                        (dto1.getTrain_number(), dto1.getCoach_name(), dto1.getArrivalDateTime(), dto1.getTravelDay(),
-//                                dto1.getStation_name(), dto1.getBooking_type(), dto1.getTotal_no_of_seats(),
-//                                dto1.getTotal_no_of_seats(), 0, dto1.getEach_seat_price());
-//                normalReservationTicketsList.add(normalReservationTickets);
-//            }
-//        }
-//        normalReservationRepo.saveAll(normalReservationTicketsList);
-//    }
-    public ResponseEntity<String> bookNormalReservation(BookingRequest request) throws PaymentFailedException {
-        for (Map.Entry<Integer, TrainNumberTravelDateStartingTime> entry : trainNumberTravelDateStartingTimes.entrySet()) {
-            TrainNumberTravelDateStartingTime time = entry.getValue();
-            if (request.getTrainNumber().equals(entry.getKey())) {
-                if (request.getTravelDate().equals(time.getTravelDate())) {
-                    if (!time.isBookingClosed()) {
-                        return normalReservationService.bookNormalReservationTickets(request);
-                    } else {
-                        log.info("Booking Closed");
-                        return ResponseEntity.badRequest().body("Booking Closed");
-                    }
-                } else {
-                    return normalReservationService.bookNormalReservationTickets(request);
-                }
-            }
-        }
-        return ResponseEntity.badRequest().body("Enter the Correct Train Number");
-    }
-
-
     public ResponseEntity<String> getNextNormalReservationTickets() {
         log.info("Request in getNextNormalReservationTickets");
         NormalTicketDTOWrapper wrapper = trainFeign.getNextNormalReservationTickets(trainNumberAndLastTravelDate);
@@ -215,10 +203,11 @@ public class BookingService {
                             dto.getArrivalDateTime(), dto.getDepartureDateTime(), dto.getStation_name(),
                             dto.getTotal_no_of_seats(), dto.getTotal_no_of_seats(), 0,
                             dto.getEach_seat_price(), dto.getStartingTime());
-
+            normalReservationTickets.setIsBookingClosed(BookingStatus.NO);
             ticketsList.add(normalReservationTickets);
         }
         normalReservationRepo.saveAll(ticketsList);
+        localNormalReservationService.setListOfTrains(ticketsList);
         return ResponseEntity.ok("Next Normal Reservation Tickets Saved");
     }
 
@@ -241,7 +230,13 @@ public class BookingService {
             trainNumberAndLastTravelDate.put(trainNumber, travelDate);
         }
         normalReservationRepo.saveAll(reservationTickets);
+
         getTrainCoachNumberDTO(normalTicketDTOWrapper.getTrainCoachNumberDTOList());
+    }
+
+    private void addTrainNumberTravelDateStartingTime(NormalReservationTickets normalReservationTickets) {
+
+
     }
 
     private void getTrainCoachNumberDTO(List<TrainCoachNumberDTO> trainCoachNumberDTOS) {
@@ -491,7 +486,7 @@ public class BookingService {
                 callCancellationBookingEvent(bookedTicketsAndStatus, details);
                 CheckAnyWaitingListTicket(bookedTicketsAndStatus);
             } else {
-                log.info("Cancelling Request Not Available");
+                log.info("Cancellation Request Closed");
             }
         } else {
             log.info("WAITING Tickets Cant be Cancelled!");
@@ -675,5 +670,95 @@ public class BookingService {
             }
         }
         return list;
+    }
+
+    @Transactional
+    public ResponseEntity<String> confirmOrCancelRequest(ConfirmOrCancelRequest request) throws PaymentFailedException {
+        CalculatedAmount amount = calculatedAmountRepo.findById(request.getCalculatedAmountId())
+                .orElseThrow(() -> new RuntimeException("Id Not Found"));
+        BookingRequestTable requestTable = requestTableRepo.findByUserIdAndCalculatedAmountId(request.getUserId(),
+                        request.getCalculatedAmountId())
+                .orElseThrow(() -> new RuntimeException("User Id or CalculatedAmount ID Not Present"));
+        if (!request.getAmount().equals(requestTable.getTotalTicketsPrice())) {
+            throw new RuntimeException("Wrong Amount");
+        }
+        if (requestTable.getBookingStatus().equals(BookingStatus.WAITING) &&
+                request.getStatus().equals(BookingStatus.CONFIRMED)) {
+            if (requestTable.getBookingMethod().equals("Tatkal") &&
+                    requestTable.getTicketAvailability().equals(BookingStatus.YES)) {
+                if (isTatkalAndPremiunTatkalClosed == false) {
+                    tatkalService.book(null, request, requestTable);
+                    requestTable.setBookingStatus(BookingStatus.CONFIRMED);
+                    return new ResponseEntity<>("Success Booked", HttpStatus.ACCEPTED);
+                } else {
+                    throw new RuntimeException("Tatkal or Premium Tatkal Closed");
+                }
+            } else if (requestTable.getBookingMethod().equals("Premium Tatkal") &&
+                    requestTable.getTicketAvailability().equals(BookingStatus.YES)) {
+                if (isTatkalAndPremiunTatkalClosed == false) {
+                    premiumTatkalService.book(null, request, requestTable);
+                    requestTable.setBookingStatus(BookingStatus.CONFIRMED);
+                    return new ResponseEntity<>("Success Booked", HttpStatus.ACCEPTED);
+                } else {
+                    throw new RuntimeException("Tatkal or Premium Tatkal Closed");
+                }
+            }
+        } else {
+            throw new RuntimeException("CONFIRMED Request Cannot Book or Please check the request again with Status:CONFIRMED");
+        }
+        if (requestTable.getBookingMethod().equals("Normal Reservation")) {
+            normalReservationService.bookprocess2(request, requestTable);
+            requestTable.setBookingStatus(BookingStatus.CONFIRMED);
+            return new ResponseEntity<>("Success Booked", HttpStatus.ACCEPTED);
+        }
+        return new ResponseEntity<>("Success Failed", HttpStatus.BAD_REQUEST);
+    }
+
+//    public ResponseEntity<TicketsResponse> bookNormalReservation(BookingRequest request) {
+//
+//
+//    }
+//    public HashMap<Integer, List<PremiumAndTatkalDTO>> getNormalTicketsManually() {
+//        HashMap<Integer, List<PremiumAndTatkalDTO>> trainDTO1 = trainFeign.sendNormalTicketsToBookingServiceManually().getHashMap();
+//        addNormalTickets(trainDTO1);
+//        return trainDTO1;
+//    }
+
+    //    private void addNormalTickets(HashMap<Integer, List<PremiumAndTatkalDTO>> trainDTO1) {
+//        List<NormalReservationTickets> normalReservationTicketsList = new ArrayList<>();
+//        for (Map.Entry<Integer, List<PremiumAndTatkalDTO>> listEntry : trainDTO1.entrySet()) {
+//            List<PremiumAndTatkalDTO> dto1List = listEntry.getValue();
+//            for (PremiumAndTatkalDTO dto1 : dto1List) {
+//                NormalReservationTickets normalReservationTickets = new NormalReservationTickets
+//                        (dto1.getTrain_number(), dto1.getCoach_name(), dto1.getArrivalDateTime(), dto1.getTravelDay(),
+//                                dto1.getStation_name(), dto1.getBooking_type(), dto1.getTotal_no_of_seats(),
+//                                dto1.getTotal_no_of_seats(), 0, dto1.getEach_seat_price());
+//                normalReservationTicketsList.add(normalReservationTickets);
+//            }
+//        }
+//        normalReservationRepo.saveAll(normalReservationTicketsList);
+//    }
+    public ResponseEntity<TicketsResponse> bookNormalReservation(BookingRequest request) throws PaymentFailedException {
+        return normalReservationService.bookProcess1(request, null);
+    }
+
+    public List<NormalReservationTickets> findNormalTrainByTravelDate(LocalDate currentDate) {
+        List<NormalReservationTickets> trainList = normalReservationRepo.findAllByTravelDate(currentDate);
+        return trainList;
+    }
+
+    @Transactional
+    public void closeNormalReservation(List<NormalReservationTickets> trainList) {
+        log.info("Request in closeNormalReservation");
+        if (trainList != null) {
+            for (NormalReservationTickets train : trainList) {
+                List<NormalReservationTickets> tickets = normalReservationRepo.findAllByTrainNumberAndTravelDate(train.getTrainNumber(), train.getTravelDate());
+                for (NormalReservationTickets ticket : tickets) {
+                    log.info("Train Found");
+                    ticket.setIsBookingClosed(BookingStatus.YES);
+                }
+            }
+            log.info("Some Train closed Normal Reservation");
+        }
     }
 }

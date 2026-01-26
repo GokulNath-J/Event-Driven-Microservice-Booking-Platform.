@@ -1,7 +1,9 @@
 package com.example.Booking.Service.ScheduledMethodsPackage;
 
 import com.example.Booking.Service.DTO.TrainNumberTravelDateStartingTime;
+import com.example.Booking.Service.Entity.NormalReservationTickets;
 import com.example.Booking.Service.Service.BookingService;
+import com.example.Booking.Service.Service.LocalNormalReservationService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -23,6 +28,9 @@ public class ScheduledEndpoints {
     private final static Logger log = LoggerFactory.getLogger(ScheduledEndpoints.class);
 
     private BookingService bookingService;
+
+    @Autowired
+    private LocalNormalReservationService localNormalReservationService;
 
     public ScheduledEndpoints(BookingService bookingService) {
         this.bookingService = bookingService;
@@ -35,14 +43,14 @@ public class ScheduledEndpoints {
         return "takalAndPremiumTatkalOpenned";
     }
 
-    @Scheduled(cron = "0 0 12 * * *")
+    @Scheduled(cron = "0 0 20 * * *")
     public String takalAndPremiumTatkalClosing() {
         BookingService.setIsTatkalAndPremiunTatkalClosed(true);
         log.info("takalAndPremiumTatkalClosed");
         return "takalAndPremiumTatkalClosed";
     }
 
-    @Scheduled(cron = "0 50 9 * * *")
+    @Scheduled(cron = "0 55 9 * * *")
     public String getTatkalAndPremiunTatkal() {
         bookingService.getPremiumAndTataklDTOManually();
         log.info("getTatkalAndPremiunTatkal");
@@ -68,43 +76,37 @@ public class ScheduledEndpoints {
         bookingService.getDistinctNormalReservationTickets();
     }
 
-//    public void closingExistingTickets() {
-//        bookingService.closingExistingTickets();
-//    }
-
 
     @Scheduled(cron = "0 */5 * * * *")
     public void closingNormalReservationPerTrain() {
         log.info("closingNormalReservationPerTrain");
-        Map<Integer, TrainNumberTravelDateStartingTime> tn = bookingService.getTrainNumberTravelDateStartingTimes();
-        for (Map.Entry<Integer, TrainNumberTravelDateStartingTime> map : tn.entrySet()) {
-            TrainNumberTravelDateStartingTime tTS = map.getValue();
-            LocalTime currentTime = LocalTime.now();
-            LocalTime trainStartingTime = tTS.getStartingTime();
-            LocalTime closingTime = trainStartingTime.minusHours(4);
-            if (currentTime.getHour() == closingTime.getHour()) {
-                tTS.setBookingClosed(true);
-                log.info("TrainNumber:{}:Closed", map.getKey());
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+        List<NormalReservationTickets> listOfTrains = localNormalReservationService.getListOfTrains();
+        List<NormalReservationTickets> trainList = new ArrayList<>();
+        for (NormalReservationTickets normaltickets : listOfTrains) {
+            LocalTime closingTime = normaltickets.getStartingTime().minusHours(4);
+            if (normaltickets.getTravelDate().equals(currentDate) && currentTime.getHour() == closingTime.getHour()) {
+                trainList.add(normaltickets);
             }
         }
+        bookingService.closeNormalReservation(trainList);
     }
 
-    @Scheduled(cron = "0 * */1 * * *")
+    @Scheduled(cron = "0 * */3 * * *")
     public void closingCancelletionTicketsPerTrain() {
         log.info("closingCancelletionTicketsPerTrain");
         //Here we are getting the Normal Reservation Tickets of a train which is going to start tomorrow.
         //How.? Because in the Normal Reservation Table we inserted a train in a correct order like (day by day),
         //and we are getting the first row of a particular train in the table
-        Map<Integer, TrainNumberTravelDateStartingTime> tn = bookingService.getTrainNumberTravelDateStartingTimes();
-        for (Map.Entry<Integer, TrainNumberTravelDateStartingTime> map : tn.entrySet()) {
-            TrainNumberTravelDateStartingTime tTS = map.getValue();
-            LocalTime currentTime = LocalTime.now();
-            LocalTime trainStartingTime = tTS.getStartingTime();
-            LocalTime closingTime = trainStartingTime.minusHours(1);
-            if (currentTime.getHour() == closingTime.getHour()) {
-                tTS.setTicketCancellingClosed(true);
-                bookingService.closingExistingTickets(tTS.getTrainNumber(), tTS.getTravelDate());
-                bookingService.clearNormalTickets(tTS.getTrainNumber(), tTS.getTravelDate());
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+        List<NormalReservationTickets> listOfTrains = localNormalReservationService.getListOfTrains();
+        for (NormalReservationTickets normaltickets : listOfTrains) {
+            LocalTime closingTime = normaltickets.getStartingTime().minusHours(1);
+            if (normaltickets.getTravelDate().equals(currentDate) && currentTime.getHour() == closingTime.getHour()) {
+                bookingService.closingExistingTickets(normaltickets.getTrainNumber(), normaltickets.getTravelDate());
+                bookingService.clearNormalTickets(normaltickets.getTrainNumber(), normaltickets.getTravelDate());
             }
         }
     }

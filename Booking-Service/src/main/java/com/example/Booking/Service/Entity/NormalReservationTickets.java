@@ -1,6 +1,7 @@
 package com.example.Booking.Service.Entity;
 
 
+import com.example.Booking.Service.DTO.BookingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,12 +39,13 @@ public class NormalReservationTickets {
     private Integer noOfSeatsBooked;
     private Double eachSeatPrice;
 
+    @Enumerated(value = EnumType.STRING)
+    private BookingStatus isBookingClosed = BookingStatus.NO;
 
     public NormalReservationTickets(Integer trainNumber, String bookingType, String coachName,
                                     LocalDate travelDate, LocalDateTime arrivalDateTime,
                                     LocalDateTime departureDateTime, String stationName, Integer totalNoOfSeats,
-                                    Integer noOfSeatsAvailable, Integer noOfSeatsBooked, Double eachSeatPrice
-                                    ,LocalTime startingTime) {
+                                    Integer noOfSeatsAvailable, Integer noOfSeatsBooked, Double eachSeatPrice, LocalTime startingTime) {
         this.trainNumber = trainNumber;
         this.bookingType = bookingType;
         this.coachName = coachName;

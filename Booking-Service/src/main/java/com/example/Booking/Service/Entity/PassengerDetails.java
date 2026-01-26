@@ -22,13 +22,13 @@ public class PassengerDetails {
     private String pnr;
     private String passengerName;
     private String gender;
-    private int age;
+    private Integer age;
     private String coachName;
     private String coachNumber;
-    private int seatNumber;
+    private Integer seatNumber;
 
 
-    public PassengerDetails(String passengerName, String gender, int age) {
+    public PassengerDetails(String passengerName, String gender, Integer age) {
         this.passengerName = passengerName;
         this.gender = gender;
         this.age = age;

@@ -16,7 +16,7 @@ public class BookingResponse {
 
 
     private String pnr;
-    private String userName;
+    private String userId;
     private Integer trainNumber;
     private LocalDate travelDate;
     private String fromStationName;

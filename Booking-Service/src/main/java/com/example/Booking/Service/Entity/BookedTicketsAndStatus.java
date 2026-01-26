@@ -44,8 +44,8 @@ public class BookedTicketsAndStatus {
     @JoinColumn(name = "pnr", referencedColumnName = "pnr")
     private List<PassengerDetails> passengersList;
 
-    public BookedTicketsAndStatus(BookingRequest bookingRequest, BookingStatus bookingStatus, Double amount) {
-        this.userName = bookingRequest.getUserName();
+    public BookedTicketsAndStatus(BookingRequestTable bookingRequest, BookingStatus bookingStatus, Double amount) {
+        this.userName = bookingRequest.getUserId();
         this.trainNumber = bookingRequest.getTrainNumber();
         this.travelDate = bookingRequest.getTravelDate();
         this.fromStationName = bookingRequest.getFromStationName();

@@ -16,12 +16,12 @@ public class TrainCoachNumberBooking {
     @Id
     @SequenceGenerator(name = "seqcoachesnum", sequenceName = "seqtrainCoachesNumber", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seqcoachesnum")
-    private int id;
-    private int trainNumber;
+    private Integer id;
+    private Integer trainNumber;
     private String coachName;
     private String coachNumber;
-    private int totalNoOfSeats;
-    private int seats = 1;
+    private Integer totalNoOfSeats;
+    private Integer seats = 1;
 
     public TrainCoachNumberBooking(Integer trainNumber, String coachName, Integer totalNoOfSeats) {
         this.trainNumber = trainNumber;

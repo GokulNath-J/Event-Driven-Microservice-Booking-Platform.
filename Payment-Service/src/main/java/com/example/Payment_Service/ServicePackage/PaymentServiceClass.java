@@ -12,12 +12,10 @@ import com.example.Payment_Service.Repository.BookingTransactionRepo;
 import com.example.Payment_Service.Repository.EWalletDetailsRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Scanner;
 import java.util.UUID;
 
 @Service
@@ -41,7 +39,7 @@ public class PaymentServiceClass {
     }
 
     public String addMoneyToEWallet(String userId, double amount) {
-        EWalletDetails walletDetails = eWalletDetailsRepo.findByUserId(userId);
+        EWalletDetails walletDetails = eWalletDetailsRepo.findByUserId(userId).orElseThrow(() -> new RuntimeException("UserID Not Found"));;
         if (walletDetails != null) {
             walletDetails.setAmount(amount);
             eWalletDetailsRepo.save(walletDetails);
@@ -51,13 +49,11 @@ public class PaymentServiceClass {
         }
     }
 
-    public ResponseEntity<PaymentResponse> paymentRequest(String userName, double totalTicketAmount) throws PaymentFailedException, InsufficientBalanceException, PasswordIncorrectException {
-        logger.info("username:{},totalTicketAmount:{}", userName, totalTicketAmount);
-        EWalletDetails eWalletDetails = eWalletDetailsRepo.findByUserName(userName);
+    public ResponseEntity<PaymentResponse> paymentRequest(String userId, double totalTicketAmount, String requestPassword) throws PaymentFailedException, InsufficientBalanceException, PasswordIncorrectException {
+        logger.info("username:{},totalTicketAmount:{}", userId, totalTicketAmount);
+        EWalletDetails eWalletDetails = eWalletDetailsRepo.findByUserId(userId).orElseThrow(() -> new RuntimeException("UserID Not Found"));
         logger.info("eWalletDetails:{}", eWalletDetails);
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter Password:");
-        String password = scanner.nextLine();
+        String password = requestPassword;
         if (eWalletDetails.getPassword().equals(password)) {
             logger.info("Password correct");
             double eWalletAmount = eWalletDetails.getAmount();
@@ -67,11 +63,11 @@ public class PaymentServiceClass {
                 BookingTransaction bookingTransaction = new BookingTransaction();
                 String transactionID = UUID.randomUUID().toString().substring(0, 14).replace("-", "");
                 bookingTransaction.setTransactionID(transactionID);
-                bookingTransaction.setUserName(userName);
+                bookingTransaction.setUserId(userId);
                 bookingTransaction.setAmount(totalTicketAmount);
                 bookingTransaction.setStatus(TransactionStatus.Success);
                 bookingTransactionRepo.save(bookingTransaction);
-                PaymentResponse paymentResponse = new PaymentResponse("Payment Success", transactionID);
+                PaymentResponse paymentResponse = new PaymentResponse(TransactionStatus.Success, transactionID);
                 return ResponseEntity.ok(paymentResponse);
             } else {
                 logger.info("Insuffient Amount:{}", totalTicketAmount);
@@ -79,7 +75,7 @@ public class PaymentServiceClass {
                 BookingTransaction bookingTransaction = new BookingTransaction();
                 String transactionID = UUID.randomUUID().toString().substring(0, 14).replace("-", "");
                 bookingTransaction.setTransactionID(transactionID);
-                bookingTransaction.setUserName(userName);
+                bookingTransaction.setUserId(userId);
                 bookingTransaction.setAmount(totalTicketAmount);
                 bookingTransaction.setStatus(TransactionStatus.Failed);
                 bookingTransactionRepo.save(bookingTransaction);

@@ -1,24 +1,20 @@
 package com.example.Booking.Service.DTO;
 
-import com.example.Booking.Service.Entity.PassengerDetails;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Builder
 public class BookingResponse {
 
 
     private String pnr;
-    private String userName;
+    private String userId;
     private Integer trainNumber;
     private LocalDate travelDate;
     private String fromStationName;

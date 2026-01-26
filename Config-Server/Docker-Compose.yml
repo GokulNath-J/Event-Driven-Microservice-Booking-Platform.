@@ -1,6 +1,6 @@
 services:
   config-server:
-    image: reservation-config-server:0.3
+    image: reservation-config-server:0.4
     container_name: config-con
     environment:
       SPRING_PROFILES_ACTIVE: docker,native
@@ -10,7 +10,7 @@ services:
       - reservation-network
 
   eureka-server:
-    image: reservation-eureka-server:0.1
+    image: reservation-eureka-server:0.2
     container_name: reservation-eureka-con
     environment:
       CONFIG_SERVER_URL: http://config-server:8000
@@ -22,7 +22,7 @@ services:
       - config-server
 
   eureka-api:
-    image: reservation-api:0.1
+    image: reservation-api:0.2
     container_name: reservation-api-con
     environment:
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka
@@ -36,7 +36,7 @@ services:
       - eureka-server
 
   train-service:
-    image: reservation-train-service:0.1
+    image: reservation-train-service:0.2
     container_name: train-con
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://reservation-mysql-con:3306/reservationdocker
@@ -54,7 +54,7 @@ services:
       - eureka-server
 
   user-service:
-    image: reservation-user-service:0.1
+    image: reservation-user-service:0.2
     container_name: user-con
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://reservation-mysql-con:3306/reservationdocker
@@ -72,9 +72,8 @@ services:
       - config-server
 
 
-
   booking-service:
-    image: reservation-booking-service:0.1
+    image: reservation-booking-service:0.2
     container_name: booking-con
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://reservation-mysql-con:3306/reservationdocker
@@ -94,7 +93,7 @@ services:
 
 
   payment-service:
-    image: reservation-payment-service:0.1
+    image: reservation-payment-service:0.2
     container_name: payment-con
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/reservationdocker

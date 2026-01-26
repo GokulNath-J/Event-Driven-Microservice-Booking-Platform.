@@ -1,10 +1,7 @@
 package com.example.User_Service.OpenFeign;
 
 
-import com.example.User_Service.DTO.BookingCancelRequestDTO;
-import com.example.User_Service.DTO.BookingRequest;
-import com.example.User_Service.DTO.TicketDTO;
-import com.example.User_Service.DTO.TrainDetailsRequest;
+import com.example.User_Service.DTO.*;
 import com.example.User_Service.ExceptionHandlerPackage.PaymentFailedException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +15,10 @@ import java.util.List;
 public interface BookingFeign {
 
     @PostMapping("/booking/bookPremiumAndTatkal")
-    public ResponseEntity<String> bookPremiumAndTatkal(@RequestBody BookingRequest request) throws PaymentFailedException;
+    public ResponseEntity<TicketsResponse> bookPremiumAndTatkal(@RequestBody BookingRequest request) throws PaymentFailedException;
 
     @PostMapping("/booking/bookNormalReservation")
-    public ResponseEntity<String> bookNormalReservation(@RequestBody BookingRequest request) throws PaymentFailedException;
+    public ResponseEntity<TicketsResponse> bookNormalReservation(@RequestBody BookingRequest request) throws PaymentFailedException;
 
     @PutMapping("/booking/bookingCancelRequest")
     public ResponseEntity<String> bookingCancelRequest(@RequestBody BookingCancelRequestDTO bookingCancelRequestDTO);
@@ -34,4 +31,7 @@ public interface BookingFeign {
 
     @PostMapping("/booking/getTrainForPremiumTatkalBookingByTrainNumber")
     public List<TicketDTO> getTrainForPremiumTatkalBookingByTrainNumber(@RequestBody TrainDetailsRequest request);
+
+    @PostMapping("/booking/confirmOrCancelRequest")
+    public ResponseEntity<String> confirmOrCancelRequest(@RequestBody ConfirmOrCancelRequest request);
 }

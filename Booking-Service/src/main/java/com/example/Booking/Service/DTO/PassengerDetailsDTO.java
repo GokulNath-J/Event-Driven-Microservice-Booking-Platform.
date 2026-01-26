@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class PassengerDetailsDTO {
     private String passengerName;
     private String gender;
-    private int age;
+    private Integer age;
 }

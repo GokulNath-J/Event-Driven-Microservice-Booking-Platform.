@@ -18,8 +18,8 @@ public class TrainNumberTravelDateStartingTime {
     private Integer trainNumber;
     private LocalDate travelDate;
     private LocalTime startingTime;
-    private boolean isBookingClosed;
-    private boolean isTicketCancellingClosed;
+    private Boolean isBookingClosed = false;
+    private Boolean isTicketCancellingClosed;
 
 
     public TrainNumberTravelDateStartingTime(Integer trainNumber, LocalDate travelDate, LocalTime startingTime) {
